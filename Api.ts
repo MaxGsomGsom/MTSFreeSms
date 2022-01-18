@@ -48,7 +48,7 @@ export function checkCode(request: CheckCodeRequest): Promise<CheckCodeResponse>
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
-    return fetch('https://moskva.mts.ru/json/smspage/Send',
+    return fetch('https://moskva.mts.ru/json/smspage/SendSms',
     {
         method: 'POST',
         headers: headers,

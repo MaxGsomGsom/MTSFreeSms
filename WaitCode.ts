@@ -5,17 +5,16 @@
 // Otherwise this violation would be treated by law and would be subject to legal prosecution.
 // Legal use of the software provides receipt of a license from the right holder only.
 
-import { Capcha, CheckCodeRequest } from "./Models";
+import { CheckCodeRequest } from "./Models";
 import SmsAndroid from 'react-native-get-sms-android';
 import { checkCode } from "./Api";
 
-export function waitCode(tempDataId: string, minDate: number): Promise<boolean> {
-  return new Promise<boolean>((resolve, reject) => {
+export function waitCode(tempDataId: string, lastSmsTime: number | undefined): Promise<number | undefined> {
+  return new Promise<number | undefined>((resolve, reject) => {
     var filter = {
       box: 'inbox',
-      minDate: minDate,
-      bodyRegex: '(.*)Вы или кто-то другой пытается отправить бесплатное сообщение с сайта МТС(.*)',
-      maxCount: 1,
+      minDate: lastSmsTime ?? (Date.now() - 24 * 60 * 60 * 1000),
+      address: "MTC"
     };
 
     SmsAndroid.list(
@@ -23,8 +22,8 @@ export function waitCode(tempDataId: string, minDate: number): Promise<boolean> 
       (fail: any) => reject('Failed with this error: ' + fail),
       async (count: number, smsList: string) => {
         const list: any[] = JSON.parse(smsList);
-        const message = list?.[0]?.body;
-        const code = message?.match(/\d+/)?.[0];
+        const message = list?.[0];
+        const code = message?.body.match(/\d+/)?.[0];
         console.log("CODE: " + code);
 
         if (code) {
@@ -34,11 +33,11 @@ export function waitCode(tempDataId: string, minDate: number): Promise<boolean> 
           };
 
           const checkResult = await checkCode(checkRequest);
-          console.log("CHECK RESULT: " + checkResult);
-          resolve(true);
+          console.log("CHECK RESULT: " + checkResult.isSucceeded);
+          resolve(+message.date);
         }
 
-        resolve(false);
+        resolve(undefined);
       },
     );
   });

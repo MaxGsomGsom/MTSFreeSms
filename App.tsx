@@ -66,13 +66,26 @@ export default function App() {
       return;
     }
 
-    const minDate = Date.now()-1000;
-    for (let i = 0; i < 10; i++) {
-      if (await waitCode(sendResult.tempDataId, minDate))
-        return;
+    // Получим время предыдущего сообщения
+    let lastSmsTime = await waitCode(sendResult.tempDataId, undefined);
+    if (lastSmsTime)
+      lastSmsTime++;
+    console.log("LAST SMS TIME: " + lastSmsTime);
+
+    //Ждем следующего
+    let i = 0;
+    function iterate(): void {
+      setTimeout(async () => {
+        const result = await waitCode(sendResult.tempDataId, lastSmsTime);
+        if (!result && i < 30) {
+          i++;
+          iterate();
+          return;
+        }
+      }, 1000);
     }
 
-    await requestCapcha();
+    iterate();
   }
 
   useEffect(() => {
@@ -88,9 +101,10 @@ export default function App() {
     if (!capcha)
       return;
 
+    selectedImages.clear();
+    setSelectedImages(selectedImages);
     setCapchaImages(createImages(capcha, selectedImages));
     setCapcha(capcha);
-    setSelectedImages(new Set<number>());
   }
 
   return (
