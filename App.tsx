@@ -5,8 +5,8 @@ import { Capcha, SendRequest, SendResponse } from "./Models";
 import { getCapchaImageBase64 } from "./Helpers";
 
 export default function App() {
-  const [sender, setSender] = useState<string | undefined>("+79112349464");
-  const [receiver, setReceiver] = useState<string | undefined>("+79818636483");
+  const [sender, setSender] = useState<string | undefined>("9112349464");
+  const [receiver, setReceiver] = useState<string | undefined>("9818636483");
   const [text, setText] = useState<string | undefined>("test");
   const [capchaImages, setCapchaImages] = useState<JSX.Element[]>([]);
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set<number>());
@@ -43,12 +43,12 @@ export default function App() {
       return;
 
     const body: SendRequest = {
-      message: text,
+      sender: sender,
       receiver: receiver,
-      sender: sender
+      message: text,
     };
 
-    const selected = Array.from(selectedImages).map(val => val + 1);
+    const selected = Array.from(selectedImages);
     sendSms(capchaSrc, selected, body).then(result => {
       console.log(result);
     });

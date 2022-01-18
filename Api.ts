@@ -14,13 +14,11 @@ export function getCapcha(): Promise<Capcha> {
 }
 
 export function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest): Promise<SendResponse> {
-
     const jscode = modifyCapchaCode(capcha.JSCode);
     if (!jscode)
         return Promise.reject("Wrong capcha JS code");
 
     const secret = eval(jscode) as CodeResult;
-    const headers = new Headers();
     const capchaHeader: CapchaHeader = {
         ids: capchaIds,
         secretName: secret.secretName,
@@ -28,16 +26,17 @@ export function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest):
         id: capcha.Id
     };
 
-    headers.append("X-QA-CAPTCHA", JSON.stringify(capchaHeader));
-    headers.append("Content-Type", "application/json");
-
-    console.log(capchaHeader);
+    const headers = {
+        ["X-QA-CAPTCHA"]: JSON.stringify(capchaHeader),
+        ["Content-Type"]: "application/json",
+        ["Accept"]: "application/json, text/plain, */*",
+    };
 
     return fetch('https://moskva.mts.ru/json/smspage/Send',
     {
         method: 'POST',
-        headers,
-        body: JSON.stringify(body)
+        headers: headers,
+        body: JSON.stringify(body),
     }).then(async response => await response.json());
 }
 
@@ -48,7 +47,7 @@ export function checkCode(request: CheckCodeRequest): Promise<CheckCodeResponse>
     return fetch('https://moskva.mts.ru/json/smspage/Send',
     {
         method: 'POST',
-        headers, body:
-        JSON.stringify(request)
+        headers: headers,
+        body: JSON.stringify(request)
     }).then(async response => await response.json());
 }
