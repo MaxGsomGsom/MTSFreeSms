@@ -5,8 +5,12 @@
 // Otherwise this violation would be treated by law and would be subject to legal prosecution.
 // Legal use of the software provides receipt of a license from the right holder only.
 
-import { Capcha, CapchaHeader, CheckCodeRequest, CheckCodeResponse, CodeResult, SendRequest, SendResponse } from "./Models";
-import { modifyCapchaCode } from "./Helpers";
+import {
+    Capcha, CapchaHeader,
+    CheckCodeRequest, CheckCodeResponse,
+    CodeResult, SendRequest, SendResponse
+} from "./Models";
+import { modifyCapchaCode } from "./ModifyCapchaCode";
 
 export function getCapcha(): Promise<Capcha> {
     return fetch('https://moskva.mts.ru/captcha/create', { method: 'POST' })

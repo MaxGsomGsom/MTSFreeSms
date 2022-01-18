@@ -1,12 +1,16 @@
-import { Button, Image, StyleSheet, Text, TextInput, View, TouchableHighlight } from 'react-native';
+import {
+  Button, Image, StyleSheet, Text,
+  TextInput, View, TouchableHighlight, PermissionsAndroid
+} from 'react-native';
 import { useEffect, useState } from "react";
 import { getCapcha, sendSms } from "./Api";
-import { Capcha, SendRequest, SendResponse } from "./Models";
-import { getCapchaImageBase64 } from "./Helpers";
+import { Capcha, SendRequest } from "./Models";
+import DeviceInfo from 'react-native-device-info';
+import { waitCode } from "./WaitCode";
 
 export default function App() {
   const [sender, setSender] = useState<string | undefined>("9112349464");
-  const [receiver, setReceiver] = useState<string | undefined>("9818636483");
+  const [receiver, setReceiver] = useState<string | undefined>("9109981293");
   const [text, setText] = useState<string | undefined>("test");
   const [capchaImages, setCapchaImages] = useState<JSX.Element[]>([]);
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set<number>());
@@ -27,7 +31,7 @@ export default function App() {
     for (let i = 0; i < capcha.Images.length; i++) {
       result.push(
         <TouchableHighlight key={i} onPress={() => updateSelectedImages(capcha, i)}>
-          <Image 
+          <Image
             source={{ uri: getCapchaImageBase64(capcha, i) }}
             style={selectedImages.has(i) ? styles.capchaImageSelected : styles.capchaImage}
           ></Image>
@@ -38,7 +42,12 @@ export default function App() {
     return result;
   }
 
-  function send(): void {
+  async function send(): Promise<void> {
+    const phone = await DeviceInfo.getPhoneNumber();
+    if (phone)
+      setSender(phone);
+    console.log("PHONE: " + phone);
+
     if (!capchaSrc || !text || !sender || !receiver)
       return;
 
@@ -49,39 +58,40 @@ export default function App() {
     };
 
     const selected = Array.from(selectedImages);
-    sendSms(capchaSrc, selected, body).then(result => {
-      console.log(result);
-    });
+    var sendResult = await sendSms(capchaSrc, selected, body);
+    console.log("SEND RESULT: " + sendResult.isValid);
+
+    if (!sendResult.isValid) {
+      await requestCapcha();
+      return;
+    }
+
+    const minDate = Date.now()-1000;
+    for (let i = 0; i < 10; i++) {
+      if (await waitCode(sendResult.tempDataId, minDate))
+        return;
+    }
+
+    await requestCapcha();
   }
-
-  /*useEffect(() => {
-    (async () => {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status === 'granted') {
-        const { data } = await Contacts.getContactsAsync({
-          fields: [Contacts.Fields.Emails],
-        });
-
-        if (data.length > 0) {
-          const contact = data[0];
-          console.log(contact);
-        }
-      }
-    })();
-  }, []);*/
 
   useEffect(() => {
     (async () => {
-      const capcha = await getCapcha();
-
-      if (!capcha)
-        return;
-
-
-      setCapchaImages(createImages(capcha, selectedImages));
-      setCapcha(capcha);
+      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE);
+      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_SMS);
+      await requestCapcha();
     })();
   }, []);
+
+  async function requestCapcha(): Promise<void> {
+    const capcha = await getCapcha();
+    if (!capcha)
+      return;
+
+    setCapchaImages(createImages(capcha, selectedImages));
+    setCapcha(capcha);
+    setSelectedImages(new Set<number>());
+  }
 
   return (
     <View style={styles.container}>
@@ -105,12 +115,10 @@ export default function App() {
       ></TextInput>
 
       <Text>Capcha</Text>
-      
+
       <View style={styles.horizontalContainer}>{capchaImages}</View>
 
       <Text>{capchaSrc?.Question}</Text>
-
-         
 
       <Button
         title="Send"
@@ -146,4 +154,6 @@ const styles = StyleSheet.create({
   }
 });
 
-
+export function getCapchaImageBase64(capcha: Capcha, number: number): string | undefined {
+  return "data:image/png;base64," + capcha.Images[number];
+}
