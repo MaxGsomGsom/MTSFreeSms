@@ -32,8 +32,7 @@ export function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest):
 
     const headers = {
         ["X-QA-CAPTCHA"]: JSON.stringify(capchaHeader),
-        ["Content-Type"]: "application/json",
-        ["Accept"]: "application/json, text/plain, */*",
+        ["Content-Type"]: "application/json"
     };
 
     return fetch('https://moskva.mts.ru/json/smspage/Send',

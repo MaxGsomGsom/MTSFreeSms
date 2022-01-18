@@ -82,10 +82,16 @@ export default function App() {
           iterate();
           return;
         }
+        clearAll();
       }, 1000);
     }
 
     iterate();
+  }
+
+
+  function clearAll(): void {
+    
   }
 
   useEffect(() => {
