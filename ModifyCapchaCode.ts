@@ -5,7 +5,7 @@
 // Otherwise this violation would be treated by law and would be subject to legal prosecution.
 // Legal use of the software provides receipt of a license from the right holder only.
 
-export function modifyCapchaCode(code: string): string | undefined {
+export function modifyCapchaCode(code: string): string {
   const baseTagRegEx = /var \w+=jQuery\('\.QACaptcha'\)\.parents\('form'\);/g;
   const jqueryOperationsBlock = /\w+.append.+= null;/g;
   const secretNameVarRegex = /attr\('name', \w+/g;

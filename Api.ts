@@ -5,6 +5,7 @@
 // Otherwise this violation would be treated by law and would be subject to legal prosecution.
 // Legal use of the software provides receipt of a license from the right holder only.
 
+import { ToastAndroid } from "react-native";
 import {
     Capcha, CapchaHeader,
     CheckCodeRequest, CheckCodeResponse,
@@ -12,16 +13,17 @@ import {
 } from "./Models";
 import { modifyCapchaCode } from "./ModifyCapchaCode";
 
-export function getCapcha(): Promise<Capcha> {
-    return fetch('https://moskva.mts.ru/captcha/create', { method: 'POST' })
-        .then(async response => await response.json());
+export async function getCapcha(): Promise<Capcha | undefined> {
+    try {
+        const result = await fetch('https://moskva.mts.ru/captcha/create', { method: 'POST' });
+        return await result.json();
+    } catch {
+        ToastAndroid.show('Отсутствует интернет', ToastAndroid.SHORT);
+    }
 }
 
-export function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest): Promise<SendResponse> {
+export async function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest): Promise<SendResponse | undefined> {
     const jscode = modifyCapchaCode(capcha.JSCode);
-    if (!jscode)
-        return Promise.reject("Wrong capcha JS code");
-
     const secret = eval(jscode) as CodeResult;
     const capchaHeader: CapchaHeader = {
         ids: capchaIds,
@@ -34,23 +36,32 @@ export function sendSms(capcha: Capcha, capchaIds: number[], body: SendRequest):
         ["X-QA-CAPTCHA"]: JSON.stringify(capchaHeader),
         ["Content-Type"]: "application/json"
     };
-
-    return fetch('https://moskva.mts.ru/json/smspage/Send',
-    {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(body),
-    }).then(async response => await response.json());
+    try {
+        const result = await fetch('https://moskva.mts.ru/json/smspage/Send',
+            {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body),
+            });
+        return await result.json();
+    } catch {
+        ToastAndroid.show('Отсутствует интернет', ToastAndroid.SHORT);
+    }
 }
 
-export function checkCode(request: CheckCodeRequest): Promise<CheckCodeResponse> {
+export async function checkCode(request: CheckCodeRequest): Promise<CheckCodeResponse | undefined> {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
-    return fetch('https://moskva.mts.ru/json/smspage/SendSms',
-    {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(request)
-    }).then(async response => await response.json());
+    try {
+        const result = await fetch('https://moskva.mts.ru/json/smspage/SendSms',
+            {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(request)
+            });
+        return await result.json();
+    } catch {
+        ToastAndroid.show('Отсутствует интернет', ToastAndroid.SHORT);
+    }
 }

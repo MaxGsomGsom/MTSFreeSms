@@ -5,12 +5,10 @@
 // Otherwise this violation would be treated by law and would be subject to legal prosecution.
 // Legal use of the software provides receipt of a license from the right holder only.
 
-import { CheckCodeRequest } from "./Models";
 import SmsAndroid from 'react-native-get-sms-android';
-import { checkCode } from "./Api";
 
-export function waitCode(tempDataId: string, lastSmsTime: number | undefined): Promise<number | undefined> {
-  return new Promise<number | undefined>((resolve, reject) => {
+export function waitCode(lastSmsTime: number | undefined): Promise<{ code: number, date: number } | undefined> {
+  return new Promise<{ code: number, date: number } | undefined>((resolve, reject) => {
     var filter = {
       box: 'inbox',
       minDate: lastSmsTime ?? (Date.now() - 24 * 60 * 60 * 1000),
@@ -24,20 +22,14 @@ export function waitCode(tempDataId: string, lastSmsTime: number | undefined): P
         const list: any[] = JSON.parse(smsList);
         const message = list?.[0];
         const code = message?.body.match(/\d+/)?.[0];
-        console.log("CODE: " + code);
+        console.log("Confirmation code found: " + code);
 
-        if (code) {
-          var checkRequest: CheckCodeRequest = {
-            tempDataId: tempDataId,
-            verificationCode: code
-          };
-
-          const checkResult = await checkCode(checkRequest);
-          console.log("CHECK RESULT: " + checkResult.isSucceeded);
-          resolve(+message.date);
+        if (!code) {
+          resolve(undefined);
+          return;
         }
 
-        resolve(undefined);
+        resolve({ code: +code, date: message.date});
       },
     );
   });
