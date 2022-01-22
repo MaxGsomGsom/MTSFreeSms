@@ -9,6 +9,7 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "~1.15.0",
     "expo": "~44.0.0",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
@@ -17,9 +18,9 @@
     "react-native": "0.64.3",
     "react-native-device-info": "^8.4.8",
     "react-native-get-sms-android": "^2.1.0",
+    "react-native-loading-spinner-overlay": "^2.0.0",
     "react-native-select-contact": "^1.6.3",
-    "react-native-web": "0.17.1",
-    "@react-native-async-storage/async-storage": "~1.15.0"
+    "react-native-web": "0.17.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
