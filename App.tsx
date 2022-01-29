@@ -111,7 +111,7 @@ export default function App() {
     function iterate(): void {
       setTimeout(async () => {
         const result = await waitCode(lastSmsTime);
-        if (!result && i < 30) {
+        if (!result && i < 60) {
           i++;
           iterate();
           return;
